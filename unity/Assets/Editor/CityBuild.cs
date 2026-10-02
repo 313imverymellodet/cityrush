@@ -39,7 +39,7 @@ public static class CityBuild
         PlayerSettings.productName = "City Rush";
         PlayerSettings.bundleVersion = "1.0.0";
         PlayerSettings.colorSpace = ColorSpace.Gamma;
-        PlayerSettings.runInBackground = false;
+        PlayerSettings.runInBackground = true;   // online matches must keep simulating when the window loses focus
         PlayerSettings.SplashScreen.show = false;
         PlayerSettings.WebGL.template = "PROJECT:CityRush";
         PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;

@@ -48,9 +48,9 @@ public class UI : MonoBehaviour
         screens = Fill("screens", root);
 
         countText = Txt(root, "", 260, new Vector2(.5f, .58f), Vector2.zero, Color.white, TextAnchor.MiddleCenter, 1000);
-        countText.fontStyle = FontStyle.BoldAndItalic; Outline(countText, 6); countText.gameObject.SetActive(false);
+        countText.fontStyle = FontStyle.Italic; Outline(countText, 6); countText.gameObject.SetActive(false);
         bannerText = Txt(root, "", 110, new Vector2(.5f, .66f), Vector2.zero, Gold, TextAnchor.MiddleCenter, 1400);
-        bannerText.fontStyle = FontStyle.BoldAndItalic; Outline(bannerText, 5);
+        bannerText.fontStyle = FontStyle.Italic; Outline(bannerText, 5);
         bannerSub = Txt(root, "", 48, new Vector2(.5f, .66f), new Vector2(0, -100), Color.white, TextAnchor.MiddleCenter, 1400);
         Outline(bannerSub, 3);
         bannerText.gameObject.SetActive(false); bannerSub.gameObject.SetActive(false);
@@ -84,9 +84,10 @@ public class UI : MonoBehaviour
     }
     Text Txt(Transform p, string s, int size, Vector2 anchor, Vector2 pos, Color c, TextAnchor align = TextAnchor.MiddleCenter, float w = 700)
     {
+        size = Mathf.Max(size, 30);   // readable floor: Lilita below this turns to mush on phones and short desktop windows
         var rt = Rect("txt", p, anchor, pos, new Vector2(w, size * 1.4f));
         var t = rt.gameObject.AddComponent<Text>();
-        t.font = F; t.fontSize = size; t.fontStyle = FontStyle.Bold; t.alignment = align; t.color = c; t.text = s;
+        t.font = F; t.fontSize = size; t.fontStyle = FontStyle.Normal; t.alignment = align; t.color = c; t.text = s;
         t.raycastTarget = false; t.horizontalOverflow = HorizontalWrapMode.Overflow; t.verticalOverflow = VerticalWrapMode.Overflow;
         return t;
     }
@@ -94,10 +95,14 @@ public class UI : MonoBehaviour
     Button Btn(Transform p, string label, Vector2 anchor, Vector2 pos, Vector2 size, Color bg, Color fg, Action onClick, int fs = 48)
     {
         var rt = Box(p, anchor, pos, size, bg, true);
+        // raised lip: reads as a button over the busy city flyover
+        var lip = Box(rt, new Vector2(.5f, 0), new Vector2(0, -8), new Vector2(size.x, 20), Color.Lerp(bg.a < 0.5f ? new Color(0, 0, 0, 0.35f) : bg, Color.black, 0.45f));
+        lip.pivot = new Vector2(.5f, 0); lip.SetAsFirstSibling();
         var b = rt.gameObject.AddComponent<Button>(); b.targetGraphic = rt.GetComponent<Image>();
         b.onClick.AddListener(() => { Sfx.I.Click(); onClick(); });
+        rt.gameObject.AddComponent<Press>();
         var t = Txt(rt, label, fs, new Vector2(.5f, .5f), Vector2.zero, fg, TextAnchor.MiddleCenter, size.x);
-        t.fontStyle = FontStyle.BoldAndItalic;
+        t.fontStyle = FontStyle.Italic;
         return b;
     }
 
@@ -124,29 +129,29 @@ public class UI : MonoBehaviour
         nitroFill.type = Image.Type.Filled; nitroFill.fillMethod = Image.FillMethod.Vertical; nitroFill.preserveAspect = false;
         nitroFill.color = Kit.A(Cyan, 0.75f);
         nitroRing = Img(n, ring, new Vector2(.5f, .5f), Vector2.zero, new Vector2(270, 270)); nitroRing.color = Cyan;
-        var nt = Txt(n, "NITRO", 46, new Vector2(.5f, .5f), Vector2.zero, Color.white); nt.fontStyle = FontStyle.BoldAndItalic; Outline(nt, 3);
+        var nt = Txt(n, "NITRO", 46, new Vector2(.5f, .5f), Vector2.zero, Color.white); nt.fontStyle = FontStyle.Italic; Outline(nt, 3);
 
         var b = Rect("brake", controls, new Vector2(1, 0), new Vector2(-440, 130), new Vector2(190, 150));
         var bImg = b.gameObject.AddComponent<Image>(); bImg.sprite = Kit.RoundedSprite; bImg.type = Image.Type.Sliced; bImg.color = new Color(0.6f, 0.05f, 0.15f, 0.5f);
         brakeBtn = b.gameObject.AddComponent<HoldButton>();
-        var bt = Txt(b, "BRAKE", 38, new Vector2(.5f, .5f), Vector2.zero, Color.white); bt.fontStyle = FontStyle.BoldAndItalic; Outline(bt, 2);
+        var bt = Txt(b, "BRAKE", 38, new Vector2(.5f, .5f), Vector2.zero, Color.white); bt.fontStyle = FontStyle.Italic; Outline(bt, 2);
         keysHint = Txt(hud, "STEER  A/D or ARROWS     NITRO  SPACE     BRAKE  S", 26, new Vector2(.5f, 0), new Vector2(0, 40), new Color(1, 1, 1, 0.45f), TextAnchor.MiddleCenter, 1200);
 
         // top-left: position
         posText = Txt(hud, "1", 150, new Vector2(0, 1), new Vector2(120, -130), Color.white, TextAnchor.MiddleCenter, 240);
-        posText.fontStyle = FontStyle.BoldAndItalic; Outline(posText, 5);
+        posText.fontStyle = FontStyle.Italic; Outline(posText, 5);
         posOf = Txt(hud, "/6", 50, new Vector2(0, 1), new Vector2(255, -160), Soft, TextAnchor.MiddleLeft, 200);
-        posOf.fontStyle = FontStyle.BoldAndItalic; Outline(posOf, 3);
+        posOf.fontStyle = FontStyle.Italic; Outline(posOf, 3);
 
         // top-center: lap + time
         lapText = Txt(hud, "LAP 1/3", 54, new Vector2(.5f, 1), new Vector2(0, -80), Gold, TextAnchor.MiddleCenter, 600);
-        lapText.fontStyle = FontStyle.BoldAndItalic; Outline(lapText, 3);
+        lapText.fontStyle = FontStyle.Italic; Outline(lapText, 3);
         timeText = Txt(hud, "0:00.00", 46, new Vector2(.5f, 1), new Vector2(0, -145), Color.white, TextAnchor.MiddleCenter, 600);
         Outline(timeText, 3);
         bestText = Txt(hud, "", 30, new Vector2(.5f, 1), new Vector2(0, -195), Soft, TextAnchor.MiddleCenter, 600);
         Outline(bestText, 2);
         wrongText = Txt(hud, "WRONG WAY!", 90, new Vector2(.5f, .5f), new Vector2(0, 220), Hot, TextAnchor.MiddleCenter, 1200);
-        wrongText.fontStyle = FontStyle.BoldAndItalic; Outline(wrongText, 5); wrongText.gameObject.SetActive(false);
+        wrongText.fontStyle = FontStyle.Italic; Outline(wrongText, 5); wrongText.gameObject.SetActive(false);
 
         // top-right: minimap
         var mbg = Box(hud, new Vector2(1, 1), new Vector2(-170, -270), new Vector2(300, 300), new Color(0, 0, 0, 0.35f));
@@ -156,7 +161,7 @@ public class UI : MonoBehaviour
 
         // speed under the minimap
         speedText = Txt(hud, "0", 80, new Vector2(1, 1), new Vector2(-270, -470), Color.white, TextAnchor.MiddleRight, 300);
-        speedText.fontStyle = FontStyle.BoldAndItalic; Outline(speedText, 4);
+        speedText.fontStyle = FontStyle.Italic; Outline(speedText, 4);
         var kmh = Txt(hud, "KM/H", 30, new Vector2(1, 1), new Vector2(-70, -482), Soft, TextAnchor.MiddleCenter, 120);
         Outline(kmh, 2);
 
@@ -280,9 +285,9 @@ public class UI : MonoBehaviour
 
     Text Title(Transform p, string s, float y, int size, Color c)
     {
-        Txt(p, s, size, new Vector2(.5f, 1), new Vector2(8, y - 8), new Color(0, 0, 0, 0.55f), TextAnchor.MiddleCenter, 1400).fontStyle = FontStyle.BoldAndItalic;
+        Txt(p, s, size, new Vector2(.5f, 1), new Vector2(8, y - 8), new Color(0, 0, 0, 0.55f), TextAnchor.MiddleCenter, 1400).fontStyle = FontStyle.Italic;
         var t = Txt(p, s, size, new Vector2(.5f, 1), new Vector2(0, y), c, TextAnchor.MiddleCenter, 1400);
-        t.fontStyle = FontStyle.BoldAndItalic;
+        t.fontStyle = FontStyle.Italic;
         return t;
     }
 
@@ -306,7 +311,7 @@ public class UI : MonoBehaviour
             bool sel = m.id == r.Map.id;
             var card = Box(s, new Vector2(.5f, 1), new Vector2(i == 0 ? -240 : 240, -700), new Vector2(450, 250), sel ? Kit.A(m.neon, 0.9f) : new Color(1, 1, 1, 0.12f), true);
             var nm = Txt(card, m.name, 54, new Vector2(.5f, .5f), new Vector2(0, 55), sel ? Ink : Color.white, TextAnchor.MiddleCenter, 440);
-            nm.fontStyle = FontStyle.BoldAndItalic;
+            nm.fontStyle = FontStyle.Italic;
             var tl = Txt(card, m.tagline, 25, new Vector2(.5f, .5f), new Vector2(0, -8), sel ? Kit.A(Ink, 0.8f) : Soft, TextAnchor.MiddleCenter, 400);
             tl.horizontalOverflow = HorizontalWrapMode.Wrap; tl.rectTransform.sizeDelta = new Vector2(400, 70); tl.fontStyle = FontStyle.Normal;
             float best = r.Save.Best(m.id);
@@ -321,7 +326,7 @@ public class UI : MonoBehaviour
         var cbox = Box(s, new Vector2(.5f, 1), new Vector2(0, -1080), new Vector2(940, 400), new Color(0, 0, 0, 0.45f));
         Img(cbox, Icon(def.id), new Vector2(.5f, .5f), new Vector2(-215, 0), new Vector2(420, 420));
         var cn = Txt(cbox, def.name, 56, new Vector2(.5f, .5f), new Vector2(180, 120), Color.white, TextAnchor.MiddleCenter, 460);
-        cn.fontStyle = FontStyle.BoldAndItalic;
+        cn.fontStyle = FontStyle.Italic;
         Stat(cbox, "SPEED", Mathf.InverseLerp(50, 67, def.top), 40);
         Stat(cbox, "ACCEL", Mathf.InverseLerp(17, 25, def.accel), -30);
         Stat(cbox, "GRIP", Mathf.InverseLerp(0.9f, 1.16f, def.handling), -100);
@@ -412,7 +417,7 @@ public class UI : MonoBehaviour
             bool isMe = c == me;
             var row = Box(s, new Vector2(.5f, 1), new Vector2(0, -540 - i * 105), new Vector2(920, 92), isMe ? Kit.A(Hot, 0.55f) : new Color(1, 1, 1, i % 2 == 0 ? 0.1f : 0.05f));
             var pt = Txt(row, (i + 1).ToString(), 48, new Vector2(0, .5f), new Vector2(60, 0), i == 0 ? Gold : Color.white, TextAnchor.MiddleCenter, 100);
-            pt.fontStyle = FontStyle.BoldAndItalic;
+            pt.fontStyle = FontStyle.Italic;
             Img(row, Icon(c.Def.id), new Vector2(0, .5f), new Vector2(165, 0), new Vector2(110, 110));
             Txt(row, c.Name + (c.Driver == Driver.Remote ? "" : c == me ? "" : "  (AI)"), 38, new Vector2(0, .5f), new Vector2(430, 0), c.Driver == Driver.Remote ? Cyan : Color.white, TextAnchor.MiddleLeft, 420);
             string tm = c.Finished ? Time(c.FinishTime) : online ? "RACING..." : "DNF";

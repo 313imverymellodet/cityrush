@@ -47,7 +47,7 @@ public class Race : MonoBehaviour
         WebGLInput.captureAllKeyboardInput = false;
 #endif
         var url = Application.absoluteURL;
-        Dev = url.Contains("dev=1"); AutoPlay = url.Contains("bot=1"); AutoDrive = AutoPlay || (Dev && url.Contains("autodrive=1"));
+        Dev = url.Contains("dev=1") && (url.Contains("://localhost") || url.Contains("://127.0.0.1"));   // cheats never on the live site AutoPlay = url.Contains("bot=1"); AutoDrive = AutoPlay || (Dev && url.Contains("autodrive=1"));
         DevCam.Install(Dev);
         var json = PlayerPrefs.GetString("cr_save", "");
         Save = string.IsNullOrEmpty(json) ? new SaveData() : JsonUtility.FromJson<SaveData>(json) ?? new SaveData();
@@ -392,6 +392,8 @@ public class Race : MonoBehaviour
     }
 
     public void ToggleMute() { Save.muted = !Save.muted; Sfx.I.SetMuted(Save.muted); Persist(); }
+
+    void OnApplicationFocus(bool f) { if (!f && !Online && (State == St.Countdown || State == St.Racing) && Time.timeScale > 0) Pause(); }
 
     public void Pause()
     {
