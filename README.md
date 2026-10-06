@@ -2,10 +2,21 @@
 
 Arcade street racing in the browser. Race 5 AI rivals, or up to 3 real players online, across two cities. Each city has its own live leaderboard. It's a Unity 6 WebGL game, runs on phones and desktop, and is hosted on Vercel.
 
+## The hook: TRAFFIC WEAVE
+Races run through **live city traffic**: sedans, vans, delivery trucks and garbage trucks cruising the lanes (`Traffic.cs`).
+- **Near miss:** skim past a civilian car going much faster than it, and you get a burst of NITRO. Chain them within 3 s for a **combo**; each step adds more.
+- **Crash:** hit traffic yourself and you lose most of your speed. The car spins out and debris flies.
+- **Takedown:** shove a rival (a real bump, not rubbing) and if it hits traffic within 1.2 s, it's a **TAKEDOWN**: +45 nitro and the rival is wrecked.
+- AI rivals look ahead and swerve into the clearest lane, but they still get caught out sometimes.
+- Results show near misses, best combo, takedowns and crashes. The share text brags about them.
+- Analytics: `near_miss` (value = combo), `takedown`, `traffic_crash`, plus `weave_nearmiss` and `weave_takedowns` at the finish.
+- Traffic is local to each player. Online rivals are ghosts, so they don't collide with it.
+- Leaderboard times from before traffic (October 2026) were set on empty roads.
+
 ## How to play
 - **Gas is automatic.** You only steer.
 - **Steer:** slide a thumb on the left half of the screen (keyboard: A/D or the arrow keys).
-- **Drift:** hold a hard turn at speed to charge the **NITRO** bar. Tap NITRO (Space) to fire it.
+- **Nitro** comes from near misses (and drifting). Tap NITRO (Space) to fire it.
 - **Blue chevron pads** give you a free speed boost. **Brake** (S or Down) helps on tight corners.
 - A race is 3 laps. Your best time on each city is posted to that city's leaderboard.
 

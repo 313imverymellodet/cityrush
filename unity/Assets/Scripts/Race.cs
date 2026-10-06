@@ -47,7 +47,8 @@ public class Race : MonoBehaviour
         WebGLInput.captureAllKeyboardInput = false;
 #endif
         var url = Application.absoluteURL;
-        Dev = url.Contains("dev=1") && (url.Contains("://localhost") || url.Contains("://127.0.0.1"));   // cheats never on the live site AutoPlay = url.Contains("bot=1"); AutoDrive = AutoPlay || (Dev && url.Contains("autodrive=1"));
+        Dev = url.Contains("dev=1") && (url.Contains("://localhost") || url.Contains("://127.0.0.1"));   // cheats never on the live site
+        AutoPlay = url.Contains("bot=1"); AutoDrive = AutoPlay || (Dev && url.Contains("autodrive=1"));
         DevCam.Install(Dev);
         var json = PlayerPrefs.GetString("cr_save", "");
         Save = string.IsNullOrEmpty(json) ? new SaveData() : JsonUtility.FromJson<SaveData>(json) ?? new SaveData();
@@ -64,6 +65,7 @@ public class Race : MonoBehaviour
         sun.shadowBias = 0.05f; sun.shadowNormalBias = 0.4f;
         world = new GameObject("World").transform;
         new GameObject("UI").AddComponent<UI>().Init();
+        new GameObject("Traffic").AddComponent<Traffic>();
 
         LoadMap(Save.map);
         GoMenu();
@@ -85,6 +87,7 @@ public class Race : MonoBehaviour
         foreach (var c in Cars) if (c) Destroy(c.gameObject);
         Cars.Clear(); Player = null;
         Track = Track.Build(Map, world);
+        Traffic.I.Build(Track, Map.downtown);
         if (Dev) Debug.Log("TRACK " + Map.id + " length=" + Track.Length);
         Cam.backgroundColor = Map.sky;
         RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear;
@@ -147,6 +150,7 @@ public class Race : MonoBehaviour
     void BeginCountdown()
     {
         if (AutoDrive) Player.Driver = Driver.AI;
+        Traffic.I.Reset();
         State = St.Countdown;
         Countdown = 3.9f; RaceTime = 0;
         UI.I.ShowHud(true);
@@ -230,7 +234,7 @@ public class Race : MonoBehaviour
             Countdown -= dt;
             int a = Mathf.CeilToInt(before - 0.9f), b = Mathf.CeilToInt(Countdown - 0.9f);
             if (a != b && b >= 0) { UI.I.CountdownNumber(b == 0 ? "GO!" : b.ToString(), b == 0); Sfx.I.Beep(b == 0); }
-            if (Countdown <= 0.9f) { State = St.Racing; RaceTime = 0; foreach (var c in Cars) c.LapStart = 0; }
+            if (Countdown <= 0.9f) { State = St.Racing; RaceTime = 0; foreach (var c in Cars) c.LapStart = 0; UI.I.Toast("WEAVE THROUGH TRAFFIC  -  NEAR MISSES FILL NITRO"); }
         }
         if (State == St.Racing || State == St.Finished) RaceTime += dt;
 
@@ -246,6 +250,7 @@ public class Race : MonoBehaviour
             foreach (var c in Cars) c.Sim(h, Track, RaceTime, raceOn || State == St.Menu);
             Collide();
         }
+        Traffic.I.Tick(dt, Cars, State == St.Menu ? null : Player, RaceTime, State == St.Racing && Player && !Player.Finished);
 
         if (Player)
         {
@@ -308,6 +313,9 @@ public class Race : MonoBehaviour
                         float rel = Vector3.Dot(b.Vel - a.Vel, n);
                         if (rel < 0) { a.Vel += n * rel * 0.6f; b.Vel -= n * rel * 0.6f; }
                         if ((a == Player || b == Player) && Mathf.Abs(rel) > 3f) { Sfx.I.Bump(); Shake(0.15f); }
+                        // a real shove (not just rubbing in the pack) arms a takedown
+                        if (Mathf.Abs(rel) > 4f && a == Player && b.Driver == Driver.AI) b.BumpedByPlayer = RaceTime;
+                        if (Mathf.Abs(rel) > 4f && b == Player && a.Driver == Driver.AI) a.BumpedByPlayer = RaceTime;
                     }
             }
     }
@@ -352,6 +360,8 @@ public class Race : MonoBehaviour
             WebBridge.RaceSubmit(Map.id, Mathf.RoundToInt(c.FinishTime * 1000), Mathf.RoundToInt(c.BestLap * 1000));
         if (Online) WebBridge.NetFinish(Mathf.RoundToInt(c.FinishTime * 1000));
         WebBridge.Event("finish_" + Map.id, place);
+        WebBridge.Event("weave_nearmiss", Traffic.I.NearMisses);
+        WebBridge.Event("weave_takedowns", Traffic.I.Takedowns);
         // solo: project the AI finishing times so the results table is complete right away
         if (!Online)
         {
@@ -413,7 +423,7 @@ public class Race : MonoBehaviour
     {
         int place = Player ? Standings().IndexOf(Player) + 1 : 0;
         string t = Player && Player.Finished ? UI.Time(Player.FinishTime) : "";
-        return "CITY RUSH  " + Map.name + ": " + (place == 1 ? "1st place" : "P" + place) + " in " + t + (Online ? " vs real racers" : "") + ". Beat my time!";
+        return "CITY RUSH  " + Map.name + ": " + (place == 1 ? "1st place" : "P" + place) + " in " + t + (Online ? " vs real racers" : "") + " with " + Traffic.I.NearMisses + " near misses and " + Traffic.I.Takedowns + " takedowns. Beat that!";
     }
 
     [Serializable] public class RankMsg { public int rank, total, best; public bool newBest; public string error, map; }

@@ -61,6 +61,7 @@ public class Car : MonoBehaviour
     SpriteRenderer flame;
     float wheelSpin, roll, pitch;
     public float WallHit;            // >0 right after a wall impact (player feedback)
+    public float BumpedByPlayer = -99f;   // race time of the player's last shove (a crash into traffic soon after = takedown)
 
     static Sprite glowSprite;
     Renderer[] rends; bool visible = true;
@@ -253,7 +254,11 @@ public class Car : MonoBehaviour
             if (ds > 1f && ds < 14f && Mathf.Abs(track.Lateral(o.transform.position, o.Index) - Lane) < 2.4f && o.Speed < Speed + 2f)
                 LaneTarget = Mathf.Clamp(track.Lateral(o.transform.position, o.Index) + (Lane > 0 ? -4.5f : 4.5f), -4.5f, 4.5f);
         }
-        Lane = Mathf.MoveTowards(Lane, LaneTarget, dt * 2.2f);
+        // weave around slow civilian traffic (mostly: the odd rival still plows into it)
+        float scan = 26f + Mathf.Abs(Speed) * 0.9f;
+        bool dodging = Traffic.I && Traffic.I.Blocked(S, LaneTarget, scan, out _);
+        if (dodging) LaneTarget = Traffic.I.BestLane(S, Lane, scan * 1.4f);
+        Lane = Mathf.MoveTowards(Lane, LaneTarget, dt * (dodging ? 4.8f : 2.6f));
         var target = track.PointAt(S + look, Lane);
         var fwd = new Vector3(Mathf.Sin(Heading), 0, Mathf.Cos(Heading));
         float ang = Vector3.SignedAngle(fwd, target - transform.position, Vector3.up);

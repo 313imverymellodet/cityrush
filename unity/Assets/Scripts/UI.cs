@@ -252,6 +252,15 @@ public class UI : MonoBehaviour
 
     public void Toast(string s) { toastText.text = s; toastT = 2.6f; toastText.gameObject.SetActive(true); }
 
+    // near misses / crashes: a punchy line above the car
+    Text trickText; float trickT;
+    public void Trick(string s, Color c)
+    {
+        if (!trickText) { trickText = Txt(hud, "", 70, new Vector2(.5f, .5f), new Vector2(0, 230), c, TextAnchor.MiddleCenter, 1200); trickText.fontStyle = FontStyle.Italic; Outline(trickText, 4); }
+        trickText.text = s; trickText.color = c; trickT = 1.1f;
+        trickText.gameObject.SetActive(true);
+    }
+
     public void NameTag(Transform t, string name)
     {
         var x = Txt(tags, name, 30, Vector2.zero, Vector2.zero, Cyan, TextAnchor.MiddleCenter, 400);
@@ -301,7 +310,7 @@ public class UI : MonoBehaviour
         shade.anchorMin = Vector2.zero; shade.anchorMax = Vector2.one; shade.sizeDelta = Vector2.zero;
         Title(s, "CITY", -210, 190, Color.white);
         Title(s, "RUSH", -390, 190, Hot);
-        var tag = Txt(s, "STREET RACING  -  SOLO OR ONLINE", 34, new Vector2(.5f, 1), new Vector2(0, -510), Cyan, TextAnchor.MiddleCenter, 1000);
+        var tag = Txt(s, "WEAVE THROUGH TRAFFIC.  SLAM RIVALS.  FIRE NITRO.", 34, new Vector2(.5f, 1), new Vector2(0, -510), Cyan, TextAnchor.MiddleCenter, 1000);
         Outline(tag, 2);
 
         // map cards
@@ -368,10 +377,10 @@ public class UI : MonoBehaviour
         {
             "GAS IS AUTOMATIC - you just steer",
             "STEER: slide your thumb on the LEFT side\n(keyboard: A / D or LEFT / RIGHT)",
-            "DRIFT: hold a hard turn at speed\nto charge your NITRO bar",
-            "NITRO: tap the blue button (SPACE)",
+            "WEAVE: skim past traffic for NEAR MISSES\nchain them to fill NITRO fast",
+            "TAKEDOWN: shove a rival into traffic\n(don't hit it yourself!)",
+            "NITRO: tap the blue button (SPACE)\ndrifting charges it too",
             "BLUE ARROW PADS = free speed boost",
-            "BRAKE: hold BRAKE (S / DOWN) for tight turns",
             "3 LAPS. Win the race, set a record,\nclimb the leaderboard for each city",
         };
         for (int i = 0; i < rows.Length; i++)
@@ -410,12 +419,14 @@ public class UI : MonoBehaviour
         bool pb = Mathf.Abs(r.Save.Best(r.Map.id) - me.FinishTime) < 0.001f;
         rankText = Txt(s, pb ? "NEW PERSONAL BEST!" : "PERSONAL BEST  " + Time(r.Save.Best(r.Map.id)), 34, new Vector2(.5f, 1), new Vector2(0, -420), pb ? Lime : Soft, TextAnchor.MiddleCenter, 1000);
         if (lastRank != null) ApplyRank();
+        var tr = Traffic.I;
+        Txt(s, tr.NearMisses + " NEAR MISSES   -   BEST COMBO x" + tr.BestCombo + "   -   " + tr.Takedowns + " TAKEDOWNS" + (tr.Crashes > 0 ? "   -   " + tr.Crashes + " CRASHES" : ""), 32, new Vector2(.5f, 1), new Vector2(0, -482), Cyan, TextAnchor.MiddleCenter, 1100);
 
         for (int i = 0; i < order.Count; i++)
         {
             var c = order[i];
             bool isMe = c == me;
-            var row = Box(s, new Vector2(.5f, 1), new Vector2(0, -540 - i * 105), new Vector2(920, 92), isMe ? Kit.A(Hot, 0.55f) : new Color(1, 1, 1, i % 2 == 0 ? 0.1f : 0.05f));
+            var row = Box(s, new Vector2(.5f, 1), new Vector2(0, -565 - i * 105), new Vector2(920, 92), isMe ? Kit.A(Hot, 0.55f) : new Color(1, 1, 1, i % 2 == 0 ? 0.1f : 0.05f));
             var pt = Txt(row, (i + 1).ToString(), 48, new Vector2(0, .5f), new Vector2(60, 0), i == 0 ? Gold : Color.white, TextAnchor.MiddleCenter, 100);
             pt.fontStyle = FontStyle.Italic;
             Img(row, Icon(c.Def.id), new Vector2(0, .5f), new Vector2(165, 0), new Vector2(110, 110));
@@ -480,6 +491,14 @@ public class UI : MonoBehaviour
             float a = Mathf.Clamp01(bannerT * 2f);
             bannerText.color = Kit.A(bannerText.color, a); bannerSub.color = Kit.A(bannerSub.color, a);
             if (bannerT <= 0) { bannerText.gameObject.SetActive(false); bannerSub.gameObject.SetActive(false); }
+        }
+        if (trickT > 0 && trickText)
+        {
+            trickT -= udt;
+            float k = Mathf.Clamp01((1.1f - trickT) / 0.18f);
+            trickText.rectTransform.localScale = Vector3.one * (0.6f + Kit.EaseOutBack(k) * 0.4f);
+            trickText.color = Kit.A(trickText.color, Mathf.Clamp01(trickT * 3f));
+            if (trickT <= 0) trickText.gameObject.SetActive(false);
         }
         if (toastT > 0)
         {
